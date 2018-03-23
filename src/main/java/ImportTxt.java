@@ -1,17 +1,14 @@
 import beans.Item;
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 
 public class ImportTxt {
 
     private static final String DELIMITER = ";";
 
-    public void doImport(String filePath) throws Exception {
+    public void doImport(InputStream is, String filePath) throws Exception {
         DBManager dbManager = DBManager.getInstance();
-        try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
             System.out.println("Начат импорт файла '" + filePath + "'.");
             Item item;
             while ((item = readItem(reader)) != null) {

@@ -2,7 +2,8 @@ import beans.Item;
 
 import java.io.BufferedReader;
 import java.io.Closeable;
-import java.io.FileReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -100,7 +101,7 @@ public class DBManager implements Closeable {
         return values;
     }
 
-    public void clearDB() throws Exception {
+    public void dropAllTables() throws Exception {
 
         List<String> tableNames = new ArrayList<>();
         try (PreparedStatement stmt = conn.prepareStatement("SELECT name FROM main.sqlite_master WHERE type = 'table'")) {
@@ -123,11 +124,11 @@ public class DBManager implements Closeable {
         }
     }
 
-    public void executeScript(String scriptPath) throws Exception {
+    public void executeScript(InputStream is) throws Exception {
 
         StringBuilder sb = new StringBuilder();
         try (Statement stmt = conn.createStatement();
-             BufferedReader reader = new BufferedReader(new FileReader(scriptPath))) {
+             BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
 
             String curLine;
             while ((curLine = reader.readLine()) != null) {

@@ -16,7 +16,7 @@ public class TestTextManager {
 
         TextManager textManager = new TextManager(patternFinder, abbrResolver);
 
-        String text = Utils.readFile("C:\\Users\\User\\Desktop\\AbbrResolver\\src\\test\\java\\text1.txt");
+        String text = Utils.readFile(this.getClass().getResourceAsStream("/text1.txt"));
 
         List<Sentence> sentences = textManager.splitText(text);
         assertEquals(9, sentences.size());
@@ -30,7 +30,7 @@ public class TestTextManager {
 
         TextManager textManager = new TextManager(patternFinder, abbrResolver);
 
-        String text = Utils.readFile("C:\\Users\\User\\Desktop\\AbbrResolver\\src\\test\\java\\text2.txt");
+        String text = Utils.readFile(this.getClass().getResourceAsStream("/text2.txt"));
 
         List<Sentence> sentences = textManager.splitText(text);
         assertEquals(14, sentences.size());
@@ -46,7 +46,7 @@ public class TestTextManager {
 
         TextManager textManager = new TextManager(patternFinder, abbrResolver);
 
-        String text = Utils.readFile("C:\\Users\\User\\Desktop\\AbbrResolver\\src\\test\\java\\text3.txt");
+        String text = Utils.readFile(this.getClass().getResourceAsStream("/text3.txt"));
 
         List<Sentence> sentences = textManager.splitText(text);
         assertEquals(14, sentences.size());
@@ -62,7 +62,7 @@ public class TestTextManager {
 
         TextManager textManager = new TextManager(patternFinder, abbrResolver);
 
-        String text = Utils.readFile("C:\\Users\\User\\Desktop\\AbbrResolver\\src\\test\\java\\text4.txt");
+        String text = Utils.readFile(this.getClass().getResourceAsStream("/text4.txt"));
 
         List<Sentence> sentences = textManager.splitText(text);
         assertEquals(14, sentences.size());
@@ -77,7 +77,7 @@ public class TestTextManager {
 
         TextManager textManager = new TextManager(patternFinder, abbrResolver);
 
-        String text = Utils.readFile("C:\\Users\\User\\Desktop\\AbbrResolver\\src\\test\\java\\text5.txt");
+        String text = Utils.readFile(this.getClass().getResourceAsStream("/text5.txt"));
 
         List<Sentence> sentences = textManager.splitText(text);
         assertEquals(14, sentences.size());
@@ -93,7 +93,7 @@ public class TestTextManager {
 
         TextManager textManager = new TextManager(patternFinder, abbrResolver);
 
-        String text = Utils.readFile("C:\\Users\\User\\Desktop\\AbbrResolver\\src\\test\\java\\text6.txt");
+        String text = Utils.readFile(this.getClass().getResourceAsStream("/text6.txt"));
 
         List<Sentence> sentences = textManager.splitText(text);
         assertEquals(14, sentences.size());
