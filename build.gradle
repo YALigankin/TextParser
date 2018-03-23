@@ -1,0 +1,16 @@
+plugins {
+    id 'java'
+    id 'application'
+}
+
+mainClassName = 'App'
+
+dependencies {
+    compile 'org.xerial:sqlite-jdbc:3.20.1'
+    compile files('lib/JMorfSdk-2.10.4.jar')
+    testCompile 'junit:junit:4.12'
+}
+
+repositories {
+    jcenter()
+}
