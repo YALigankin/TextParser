@@ -63,6 +63,6 @@ public class Sentence {
         for (Descriptor descriptor : descriptors) {
             sb.append(" ").append(descriptor.toString());
         }
-        System.out.print("Descriptors: " + sb.toString());
+        System.out.println("Descriptors: " + sb.toString());
     }
 }
