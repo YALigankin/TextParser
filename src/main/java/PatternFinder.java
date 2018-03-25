@@ -16,8 +16,8 @@ public class PatternFinder {
                 Pattern.compile("[А-Я]\\.[А-Я]\\. ?[А-Я][А-Яа-я]+"))
         );
         PATTERNS.put(DescriptorType.SHORT_WORD, Arrays.asList(Pattern.compile("[A-ЯЁA-Z]{2,}"),
-                Pattern.compile("[а-я]+\\."),         //Сокр. усечение
-                Pattern.compile("[а-я.]+-[а-я]+"))    //Сокр.стяжение
+                Pattern.compile("[а-я]+\\.([а-я]+\\.)?"),      //Сокр. усечение
+                Pattern.compile("[а-я.]+-[а-я]+"))             //Сокр.стяжение
         );
         PATTERNS.put(DescriptorType.EMAIL, Collections.singletonList(Pattern.compile("[a-zA-Z1-9\\-\\._]+@[a-z1-9]+(.[a-z1-9]+){1,}")));
         PATTERNS.put(DescriptorType.NUM_SEQ, Collections.singletonList(Pattern.compile("\\d+[.,]\\d+")));

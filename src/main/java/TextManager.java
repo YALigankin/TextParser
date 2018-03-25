@@ -7,6 +7,7 @@ import java.util.*;
 public class TextManager {
 
     //Unicodes https://www.fileformat.info/info/unicode/category/Po/list.htm
+    private static final Set<Character> SPACE_CHAR = new HashSet<>(Arrays.asList('\u0020', '\n', '\r', '\t'));   // LF, CR, HT
     private static final Set<Character> PUNCTUATION_CHAR = new HashSet<>(Arrays.asList('\u002C', '\u003B', '\u003A', '\u0021'/*, '\u002E', '\u003F', '\u2026'*/));     // , ; :  (! . ? ...)
     private static final Set<Character> SENTENCE_END = new HashSet<>(Arrays.asList('\u002E', '\u0021', '\u003F', '\u2026'));   // . ! ? ...
     private static final Set<Character> RUSSIAN_LEX = new HashSet<>();
@@ -74,17 +75,10 @@ public class TextManager {
 
         for (int i = 0; i < text.length(); i++) {
             ch = text.charAt(i);
-            if (Character.isSpaceChar(ch)) {
-                if (wordStartPos != i) {
-                    sentence.addDescriptor(new Descriptor(getDescriptorType(hasRussianLex, hasDigit, hasForeignLex), wordStartPos, i - wordStartPos, text.substring(wordStartPos, i)));
-
-                    hasRussianLex = false;
-                    hasDigit = false;
-                    hasForeignLex = false;
-                }
-                wordStartPos = i + 1;
-            } else if (foundEnd) {
-                if (Character.isUpperCase(ch) && pairsStack.isEmpty() && !hasIntersection(i, descriptors)) {
+            if (foundEnd) {
+                if (SPACE_CHAR.contains(ch)) {
+                    continue;
+                } else if (Character.isUpperCase(ch) && pairsStack.isEmpty() && !hasIntersection(i, descriptors)) {
                     if (wordStartPos != i) {
                         sentence.addDescriptor(new Descriptor(getDescriptorType(hasRussianLex, hasDigit, hasForeignLex), wordStartPos, sentenceEndPos - wordStartPos, text.substring(wordStartPos, sentenceEndPos)));
 
@@ -107,6 +101,15 @@ public class TextManager {
                 } else {
                     foundEnd = false;
                 }
+            } else if (SPACE_CHAR.contains(ch)) {
+                if (wordStartPos != i) {
+                    sentence.addDescriptor(new Descriptor(getDescriptorType(hasRussianLex, hasDigit, hasForeignLex), wordStartPos, i - wordStartPos, text.substring(wordStartPos, i)));
+
+                    hasRussianLex = false;
+                    hasDigit = false;
+                    hasForeignLex = false;
+                }
+                wordStartPos = i + 1;
             } else if (curDescriptor != null && i == curDescriptor.getStartPos()) {    //натолкнулись на ранее найденный дескриптор
                 sentence.addDescriptor(curDescriptor);
                 i += curDescriptor.getLength() - 1;
@@ -120,17 +123,23 @@ public class TextManager {
             } else if (FOREIGN_LEX.contains(ch)) {
                 hasForeignLex = true;
             } else if (OPEN_BRACKET.contains(ch)) {
-                sentence.addDescriptor(new Descriptor(getDescriptorType(hasRussianLex, hasDigit, hasForeignLex), wordStartPos, i - wordStartPos, text.substring(wordStartPos, i)));
+                if (wordStartPos != i) {
+                    sentence.addDescriptor(new Descriptor(getDescriptorType(hasRussianLex, hasDigit, hasForeignLex), wordStartPos, i - wordStartPos, text.substring(wordStartPos, i)));
+                }
                 sentence.addDescriptor(new Descriptor(DescriptorType.OPEN_BRACKET, i, 1, Character.toString(ch)));
                 wordStartPos = i + 1;
                 pairsStack.add(ch);
             } else if (OPEN_QUOTE.contains(ch)) {
-                sentence.addDescriptor(new Descriptor(getDescriptorType(hasRussianLex, hasDigit, hasForeignLex), wordStartPos, i - wordStartPos, text.substring(wordStartPos, i)));
+                if (wordStartPos != i) {
+                    sentence.addDescriptor(new Descriptor(getDescriptorType(hasRussianLex, hasDigit, hasForeignLex), wordStartPos, i - wordStartPos, text.substring(wordStartPos, i)));
+                }
                 sentence.addDescriptor(new Descriptor(DescriptorType.OPEN_QUOTE, i, 1, Character.toString(ch)));
                 wordStartPos = i + 1;
                 pairsStack.add(ch);
             } else if ((searchPos = CLOSE_BRACKET.indexOf(ch)) >= 0) {
-                sentence.addDescriptor(new Descriptor(getDescriptorType(hasRussianLex, hasDigit, hasForeignLex), wordStartPos, i - wordStartPos, text.substring(wordStartPos, i)));
+                if (wordStartPos != i) {
+                    sentence.addDescriptor(new Descriptor(getDescriptorType(hasRussianLex, hasDigit, hasForeignLex), wordStartPos, i - wordStartPos, text.substring(wordStartPos, i)));
+                }
                 sentence.addDescriptor(new Descriptor(DescriptorType.CLOSE_BRACKET, i, 1, Character.toString(ch)));
                 wordStartPos = i + 1;
                 //rem from stack
@@ -139,7 +148,9 @@ public class TextManager {
                     foundEnd = false;
                 }
             } else if ((searchPos = CLOSE_QUOTE.indexOf(ch)) >= 0) {
-                sentence.addDescriptor(new Descriptor(getDescriptorType(hasRussianLex, hasDigit, hasForeignLex), wordStartPos, i - wordStartPos, text.substring(wordStartPos, i)));
+                if (wordStartPos != i) {
+                    sentence.addDescriptor(new Descriptor(getDescriptorType(hasRussianLex, hasDigit, hasForeignLex), wordStartPos, i - wordStartPos, text.substring(wordStartPos, i)));
+                }
                 sentence.addDescriptor(new Descriptor(DescriptorType.CLOSE_QUOTE, i, 1, Character.toString(ch)));
                 wordStartPos = i + 1;
                 //rem from stack
@@ -148,7 +159,9 @@ public class TextManager {
                     foundEnd = false;
                 }
             } else if (PUNCTUATION_CHAR.contains(ch)) {
-                sentence.addDescriptor(new Descriptor(getDescriptorType(hasRussianLex, hasDigit, hasForeignLex), wordStartPos, i - wordStartPos, text.substring(wordStartPos, i)));
+                if (wordStartPos != i) {
+                    sentence.addDescriptor(new Descriptor(getDescriptorType(hasRussianLex, hasDigit, hasForeignLex), wordStartPos, i - wordStartPos, text.substring(wordStartPos, i)));
+                }
                 sentence.addDescriptor(new Descriptor(DescriptorType.PUNCTUATION_CHAR, i, 1, Character.toString(ch)));
                 wordStartPos = i + 1;
             } else if (SENTENCE_END.contains(ch)) {

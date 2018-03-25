@@ -12,6 +12,6 @@ public class TestImportTxt {
     @Test
     public void simpleTest() throws Exception {
         ImportTxt importTxt = new ImportTxt();
-        importTxt.doImport(this.getClass().getResourceAsStream("/new.txt"), "new.txt");
+        importTxt.doImport(this.getClass().getResourceAsStream("/abbrDic.txt"), "abbrDic.txt");
     }
 }

@@ -1,6 +1,7 @@
 import beans.Item;
 
 import java.io.*;
+import java.nio.charset.Charset;
 
 public class ImportTxt {
 
@@ -8,7 +9,7 @@ public class ImportTxt {
 
     public void doImport(InputStream is, String filePath) throws Exception {
         DBManager dbManager = DBManager.getInstance();
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(is, Charset.forName("windows-1251")))) {
             System.out.println("Начат импорт файла '" + filePath + "'.");
             Item item;
             while ((item = readItem(reader)) != null) {

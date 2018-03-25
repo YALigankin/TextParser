@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.Closeable;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.Charset;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -128,7 +129,7 @@ public class DBManager implements Closeable {
 
         StringBuilder sb = new StringBuilder();
         try (Statement stmt = conn.createStatement();
-             BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
+             BufferedReader reader = new BufferedReader(new InputStreamReader(is, Charset.forName("windows-1251")))) {
 
             String curLine;
             while ((curLine = reader.readLine()) != null) {
