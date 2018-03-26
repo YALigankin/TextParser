@@ -25,7 +25,7 @@ public class DBManager implements Closeable {
         }
     }
 
-    public static DBManager getInstance() {
+    public synchronized static DBManager getInstance() {
         if (singleInstance == null) {
             singleInstance = new DBManager();
         }
