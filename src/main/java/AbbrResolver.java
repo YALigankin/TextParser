@@ -17,7 +17,7 @@ public class AbbrResolver {
         while (iter.hasNext()) {
             Descriptor curDescriptor = iter.next();
             if (curDescriptor.getType().equals(DescriptorType.SHORT_WORD)) {
-                List<String> longForms = dbManager.findAbbrLongForms(curDescriptor.getValue());    //TODO затратный поиск (нужно запрашивать пачкой)
+                List<String> longForms = dbManager.findAbbrLongForms(curDescriptor.getValue());    //TODO затратный поиск (нужно запрашивать пачкой) + cокращения могут повторяться в разных предложениях
                 if (!longForms.isEmpty()) {
                     curDescriptor.setDesc(longForms.get(0));           //TODO пока берется первое попавшееся значение аббревиатуры
                 } else {

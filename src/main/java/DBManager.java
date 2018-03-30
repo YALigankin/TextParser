@@ -8,10 +8,9 @@ import java.nio.charset.Charset;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 public class DBManager implements Closeable {
-
-    private static final String DB_FILE = "dictionary/abbreviation.db";
 
     private static DBManager singleInstance;
     private static Connection conn;
@@ -19,7 +18,9 @@ public class DBManager implements Closeable {
     private DBManager() {
         try {
             Class.forName("org.sqlite.JDBC").newInstance();
-            conn = DriverManager.getConnection("jdbc:sqlite:" + DB_FILE);
+            Properties config = new Properties();
+            config.load(this.getClass().getResourceAsStream("/dbconfig.properties"));
+            conn = DriverManager.getConnection(config.getProperty("db_url"));
         } catch (Exception e) {
             System.out.println("Ошибка подключения: " + e.getMessage());
         }
@@ -32,11 +33,12 @@ public class DBManager implements Closeable {
         return singleInstance;
     }
 
-    public static Connection getConnection() throws SQLException {
+    public static Connection getConnection() {
         try {
             if (conn == null) {
-                Class.forName("org.sqlite.JDBC").newInstance();
-                conn = DriverManager.getConnection("jdbc:sqlite:" + DB_FILE);
+                Properties config = new Properties();
+                config.load(DBManager.class.getResourceAsStream("/dbconfig.properties"));
+                conn = DriverManager.getConnection(config.getProperty("db_url"));
             }
         } catch (Exception e) {
             System.out.println("Ошибка подключения: " + e.getMessage());
@@ -47,6 +49,7 @@ public class DBManager implements Closeable {
     public void close() {
         try {
             conn.close();
+            singleInstance = null;
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
