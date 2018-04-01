@@ -1,23 +1,30 @@
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URL;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.Properties;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class TestImportTxt {
 
     @Before
     public void setUp() throws Exception {
 
+        File testDbFile = new File("dictionary/abbreviationTest.db");
+        assertTrue(testDbFile.createNewFile());
+
         changeDbUrl("jdbc:sqlite:dictionary/abbreviationTest.db");
+        DBManager.getInstance().close();
 
         DBManager.getInstance().dropAllTables();
         DBManager.getInstance().executeScript(this.getClass().getResourceAsStream("/createDb-sqlite.sql"));
@@ -26,18 +33,16 @@ public class TestImportTxt {
     @After
     public void tearDown() throws Exception {
 
-        DBManager.getInstance().close();
-
         changeDbUrl("jdbc:sqlite:dictionary/abbreviation.db");
+        DBManager.getInstance().close();
 
         assertTrue(FileUtils.deleteQuietly(new File(("dictionary/abbreviationTest.db"))));
     }
 
-    @Ignore
     @Test
     public void simpleTest() throws Exception {
         ImportTxt importTxt = new ImportTxt();
-        importTxt.doImport(this.getClass().getResourceAsStream("/abbrDic.txt"), "importTest.txt");
+        importTxt.doImport(this.getClass().getResourceAsStream("/importTest.txt"), "importTest.txt");
 
         try (Statement stmt = DBManager.getConnection().createStatement()){
             try (ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM shortForm")) {

@@ -19,7 +19,9 @@ public class DBManager implements Closeable {
         try {
             Class.forName("org.sqlite.JDBC").newInstance();
             Properties config = new Properties();
-            config.load(this.getClass().getResourceAsStream("/dbconfig.properties"));
+            try (InputStream is = this.getClass().getResourceAsStream("/dbconfig.properties")){
+                config.load(is);
+            }
             conn = DriverManager.getConnection(config.getProperty("db_url"));
         } catch (Exception e) {
             System.out.println("Ошибка подключения: " + e.getMessage());
@@ -48,7 +50,9 @@ public class DBManager implements Closeable {
 
     public void close() {
         try {
-            conn.close();
+            if (conn != null) {
+                conn.close();
+            }
             singleInstance = null;
         } catch (Exception e) {
             System.out.println(e.getMessage());
@@ -129,7 +133,6 @@ public class DBManager implements Closeable {
     }
 
     public void executeScript(InputStream is) throws Exception {
-
         StringBuilder sb = new StringBuilder();
         try (Statement stmt = conn.createStatement();
              BufferedReader reader = new BufferedReader(new InputStreamReader(is, Charset.forName("windows-1251")))) {
@@ -144,5 +147,6 @@ public class DBManager implements Closeable {
                 }
             }
         }
+        is.close();
     }
 }
