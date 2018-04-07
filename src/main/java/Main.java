@@ -16,7 +16,11 @@ public class Main {
         PatternFinder patternFinder = new PatternFinder();
         AbbrResolver abbrResolver = new AbbrResolver();
         abbrResolver.setJMorfSdk(jMorfSdk);
-        TextManager textManager = new TextManager(patternFinder, abbrResolver);
+
+        Importer importer = new ImportMemory();
+        importer.doImport(Main.class.getResourceAsStream("/abbrDic.txt"), "abbrDic.txt");
+
+        TextManager textManager = new TextManager(patternFinder, abbrResolver, MemoryDictionary.getInstance());
 
         List<Sentence> sentences = textManager.splitText(text);
 
@@ -32,8 +36,5 @@ public class Main {
         }
 
         jMorfSdk.finish();
-        /*String d1 = getAcronymTrueForm(jMorfSdk, "обсуждаемый", "тема", null);
-        String d2 = getAcronymTrueForm(jMorfSdk, "общество", "член", null);
-        String d3 = getAcronymTrueForm(jMorfSdk, "институт", "дорога", "в");*/
     }
 }

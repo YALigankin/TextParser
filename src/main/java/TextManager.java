@@ -30,10 +30,20 @@ public class TextManager {
 
     private final PatternFinder patternFinder;
     private final AbbrResolver abbrResolver;
+    private final IDictionary dictionary;
 
+    //DbDictionary
     public TextManager(PatternFinder patternFinder, AbbrResolver abbrResolver) {
         this.patternFinder = patternFinder;
         this.abbrResolver = abbrResolver;
+        this.dictionary = DBManager.getInstance();
+    }
+
+    //MemoryDictionary
+    public TextManager(PatternFinder patternFinder, AbbrResolver abbrResolver, IDictionary dictionary) {
+        this.patternFinder = patternFinder;
+        this.abbrResolver = abbrResolver;
+        this.dictionary = dictionary;
     }
 
     public List<Sentence> splitText(String text) throws Exception {
@@ -42,7 +52,7 @@ public class TextManager {
         List<Descriptor> descriptors = patternFinder.getDescriptors(text);
 
         //подгрузка значений сокращений из БД, если не найдет, то это не сокращение
-        abbrResolver.fillAbbrDescriptions(descriptors);
+        abbrResolver.fillAbbrDescriptions(dictionary, descriptors);
 
         return splitText(text, descriptors);
     }

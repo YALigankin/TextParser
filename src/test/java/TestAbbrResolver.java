@@ -15,17 +15,30 @@ public class TestAbbrResolver {
 
         JMorfSdk jMorfSdk = JMorfSdkLoad.loadFullLibrary();
 
+        //усечение в нужной форме
         String text1 = "У кажд. человека должны быть свои инструменты. Отдача последует в противоп. направлении.";
         String expText1 = "У каждого человека должны быть свои инструменты. Отдача последует в противоположном направлении.";
         assertEquals(expText1, splitTest(jMorfSdk, text1));
 
+        //аббревиатура с неcколькими словами, которые д.б. согласованы
         String text2 = "Автор книги назвал СССР пережитком прошлого. После распада СССР многое резко поменялось.";
         String expText2 = "Автор книги назвал Союз Советских Социалистических Республик пережитком прошлого. После распада Союза Советских Социалистических Республик многое резко поменялось.";
         assertEquals(expText2, splitTest(jMorfSdk, text2));
 
+        //аббревиатура с несколькими словами, которые д.б. согласованы
         String text3 = "При оформлении ИП вашей организации будет выдан ИНН.";
         String expText3 = "При оформлении индивидуального предпринимателя вашей организации будет выдан идентификационный номер налогоплательщика.";
         assertEquals(expText3, splitTest(jMorfSdk, text3));
+
+        //стяжение в производной форме
+        String text4 = "Каждый член общ-ва имеет право голоса.";
+        String expText4 = "Каждый член общества имеет право голоса.";
+        assertEquals(expText4, splitTest(jMorfSdk, text4));
+
+        //стяжение в производной форме
+        String text5 = "Новый ректор ин-та пообещал студентам хорошие стипендии.";
+        String expText5 = "Новый ректор института пообещал студентам хорошие стипендии.";
+        assertEquals(expText5, splitTest(jMorfSdk, text5));
 
         jMorfSdk.finish();
 
@@ -36,7 +49,11 @@ public class TestAbbrResolver {
         PatternFinder patternFinder = new PatternFinder();
         AbbrResolver abbrResolver = new AbbrResolver();
         abbrResolver.setJMorfSdk(jMorfSdk);
-        Iterator<Sentence> iter = new TextManager(patternFinder, abbrResolver).splitText(text).iterator();
+
+        Importer importer = new ImportMemory();
+        importer.doImport(this.getClass().getResourceAsStream("/abbrDic.txt"), "abbrDic.txt");
+
+        Iterator<Sentence> iter = new TextManager(patternFinder, abbrResolver, MemoryDictionary.getInstance()).splitText(text).iterator();
 
         StringBuilder sb = new StringBuilder();
         while (iter.hasNext()) {

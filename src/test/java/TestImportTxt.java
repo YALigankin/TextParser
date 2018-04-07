@@ -41,8 +41,8 @@ public class TestImportTxt {
 
     @Test
     public void simpleTest() throws Exception {
-        ImportTxt importTxt = new ImportTxt();
-        importTxt.doImport(this.getClass().getResourceAsStream("/importTest.txt"), "importTest.txt");
+        ImportDb importer = new ImportDb();
+        importer.doImport(this.getClass().getResourceAsStream("/importTest.txt"), "importTest.txt");
 
         try (Statement stmt = DBManager.getConnection().createStatement()){
             try (ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM shortForm")) {

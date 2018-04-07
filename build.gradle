@@ -6,6 +6,7 @@ plugins {
 mainClassName = 'Main'
 
 dependencies {
+    compile 'org.apache.commons:commons-collections4:4.1'
     compile 'commons-io:commons-io:2.6'
     compile 'org.xerial:sqlite-jdbc:3.20.1'
     compile files('lib/JMorfSdk-2.10.4.jar')

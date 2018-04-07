@@ -16,14 +16,21 @@ public class AbbrResolver {
         this.jMorfSdk = jMorfSdk;
     }
 
-    public void fillAbbrDescriptions(List<Descriptor> descriptors) throws Exception {
-        DBManager dbManager = DBManager.getInstance();
+    public void fillAbbrDescriptions(IDictionary dictionary, List<Descriptor> descriptors) throws Exception { ;
         Iterator<Descriptor> iter = descriptors.iterator();
         List<String> notFounded = new ArrayList<>();
         while (iter.hasNext()) {
             Descriptor curDescriptor = iter.next();
             if (curDescriptor.getType().equals(DescriptorType.SHORT_WORD)) {
-                List<String> longForms = dbManager.findAbbrLongForms(curDescriptor.getValue());    //TODO затратный поиск (нужно запрашивать пачкой) + cокращения могут повторяться в разных предложениях
+                List<String> longForms = dictionary.findAbbrLongForms(curDescriptor.getValue());    //TODO затратный поиск (нужно запрашивать пачкой) + cокращения могут повторяться в разных предложениях
+
+                if (longForms.isEmpty() && curDescriptor.getValue().contains("-")) {
+                    int pointer = curDescriptor.getValue().length() - 1;
+                    while (curDescriptor.getValue().charAt(pointer) != '-' && (longForms = dictionary.findAbbrLongForms(curDescriptor.getValue().substring(0, pointer))).isEmpty()) {
+                        pointer--;
+                    }
+                }
+
                 if (!longForms.isEmpty()) {
                     curDescriptor.setDesc(longForms.get(0));           //TODO пока берется первое попавшееся значение аббревиатуры
                 } else {
