@@ -10,13 +10,15 @@ import java.util.*;
 
 public class AbbrResolver {
 
+    private static final List<Byte> VERB_TYPES = Arrays.asList(MorfologyParameters.TypeOfSpeech.VERB, MorfologyParameters.TypeOfSpeech.INFINITIVE);
+
     private JMorfSdk jMorfSdk;
 
     public void setJMorfSdk(JMorfSdk jMorfSdk) {
         this.jMorfSdk = jMorfSdk;
     }
 
-    public void fillAbbrDescriptions(IDictionary dictionary, List<Descriptor> descriptors) throws Exception { ;
+    public void fillAbbrDescriptions(IDictionary dictionary, List<Descriptor> descriptors) throws Exception {
         Iterator<Descriptor> iter = descriptors.iterator();
         List<String> notFounded = new ArrayList<>();
         while (iter.hasNext()) {
@@ -58,30 +60,30 @@ public class AbbrResolver {
                 String[] acronymWords = curDescriptor.getDesc().split(" ");
                 boolean[] capitalizeWords = new boolean[acronymWords.length];
 
-                //prepare - toLowerCase with save + find main word
-                if (acronymWords.length > 1) {
-                    for (int j = 0; j < acronymWords.length; j++) {
-                        String word = acronymWords[j];
-                        if (Character.isUpperCase(word.charAt(0))) {
-                            acronymWords[j] = Utils.uncapitalize(word);
-                            capitalizeWords[j] = true;
-                        }
+                //save acronym case
+                for (int j = 0; j < acronymWords.length; j++) {
+                    String word = acronymWords[j];
+                    if (Character.isUpperCase(word.charAt(0))) {
+                        acronymWords[j] = Utils.uncapitalize(word);
+                        capitalizeWords[j] = true;
                     }
                 }
 
                 int mainWordAcronymIndex = getMainWordAcronymIndex(acronymWords);
 
-                String collacationMainWord = getMainWord(descriptors, i, acronymWords[mainWordAcronymIndex]);
-
-                if (collacationMainWord != null) {
-                    acronymWords[mainWordAcronymIndex] = getTrueAcronymForm(acronymWords[mainWordAcronymIndex], collacationMainWord, "");
+                Integer collacationMainWordIndex = getMainWordIndex(descriptors, i, acronymWords[mainWordAcronymIndex]);
+                if (collacationMainWordIndex != null) {
+                    String collMainWord = descriptors.get(collacationMainWordIndex).getValue();
+                    Integer prepositionIndex = getPrepositionIndex(descriptors, i, collacationMainWordIndex);
+                    String prepositionWord = prepositionIndex != null ? descriptors.get(prepositionIndex).getValue() : "";
+                    acronymWords[mainWordAcronymIndex] = getTrueAcronymForm(acronymWords[mainWordAcronymIndex], collMainWord, prepositionWord);
                 }
 
                 if (acronymWords.length > 1) {
                     adaptAcronymWords(acronymWords, mainWordAcronymIndex);
                 }
 
-                //restoreCase
+                //restore acronym case
                 for (int j = 0; j < acronymWords.length; j++) {
                     if (capitalizeWords[j]) {
                         acronymWords[j] = Utils.capitalize(acronymWords[j]);
@@ -117,7 +119,7 @@ public class AbbrResolver {
     /**
      * »щет главное слово в предложении дл€ сокращени€
      */
-    private String getMainWord(List<Descriptor> descriptors, int acronymIndex, String acronym) throws Exception {
+    private Integer getMainWordIndex(List<Descriptor> descriptors, int acronymIndex, String acronym) throws Exception {
 
         OmoFormList omoForms = jMorfSdk.getAllCharacteristicsOfForm(acronym);
         if (omoForms.isEmpty()) {
@@ -133,10 +135,10 @@ public class AbbrResolver {
             while (++wordIndex < descriptors.size()) {
                 Descriptor curDescriptor = descriptors.get(wordIndex);
                 if (Objects.equals(DescriptorType.RUSSIAN_LEX, curDescriptor.getType())) {
-                    String curWord = curDescriptor.getValue();
-                    OmoForm wordOmoForm = jMorfSdk.getAllCharacteristicsOfForm(curWord.toLowerCase()).get(0);
-                    if (Objects.equals(MorfologyParameters.TypeOfSpeech.NOUN, wordOmoForm.getTypeOfSpeech())) {
-                        return curWord;
+                    String curWord = curDescriptor.getValue().toLowerCase();
+                    OmoForm wordOmoForm = jMorfSdk.getAllCharacteristicsOfForm(curWord).get(0);
+                    if (wordOmoForm.getTypeOfSpeech() == MorfologyParameters.TypeOfSpeech.NOUN) {
+                        return wordIndex;
                     }
                 }
             }
@@ -145,12 +147,29 @@ public class AbbrResolver {
             while (--wordIndex >= 0) {
                 Descriptor curDescriptor = descriptors.get(wordIndex);
                 if (Objects.equals(DescriptorType.RUSSIAN_LEX, curDescriptor.getType())) {
-                    String curWord = curDescriptor.getValue();
-                    OmoForm wordOmoForm = jMorfSdk.getAllCharacteristicsOfForm(curWord.toLowerCase()).get(0);
-                    if (Objects.equals(MorfologyParameters.TypeOfSpeech.NOUN, wordOmoForm.getTypeOfSpeech())
-                            || Objects.equals(MorfologyParameters.TypeOfSpeech.VERB, wordOmoForm.getTypeOfSpeech())) {
-                        return curWord;
+                    String curWord = curDescriptor.getValue().toLowerCase();
+                    OmoForm wordOmoForm = jMorfSdk.getAllCharacteristicsOfForm(curWord).get(0);
+                    if (wordOmoForm.getTypeOfSpeech() == MorfologyParameters.TypeOfSpeech.NOUN
+                            || VERB_TYPES.contains(wordOmoForm.getTypeOfSpeech())) {
+                        return wordIndex;
                     }
+                }
+            }
+        }
+        return null;
+    }
+
+    private Integer getPrepositionIndex(List<Descriptor> descriptors, int acronymIndex, int mainWordIndex) throws Exception {
+        int delta = acronymIndex - mainWordIndex;
+        int startIndex = delta > 0 ? mainWordIndex : acronymIndex;
+        int endIndex = startIndex + Math.abs(delta);
+        for (int wordIndex = startIndex + 1; wordIndex < endIndex; wordIndex++) {
+            Descriptor curDescriptor = descriptors.get(wordIndex);
+            if (Objects.equals(DescriptorType.RUSSIAN_LEX, curDescriptor.getType())) {
+                String curWord = curDescriptor.getValue().toLowerCase();
+                OmoForm wordOmoForm = jMorfSdk.getAllCharacteristicsOfForm(curWord).get(0);
+                if (wordOmoForm.getTypeOfSpeech() == MorfologyParameters.TypeOfSpeech.PRETEXT) {
+                    return wordIndex;
                 }
             }
         }
@@ -177,7 +196,7 @@ public class AbbrResolver {
             removeIf(matchList, MorfologyParameters.Numbers.class, mainWordNumbers);
             //removeIf(jMorfSdk, matchList, MorfologyParameters.Gender.class, mainWordGender);       //мужской - средний род (противоположном направлении, противоположном ключе)
             return matchList.get(0);
-        } else if (acronymTypeOfSpeech == MorfologyParameters.TypeOfSpeech.NOUN && mainWordTypeOfSpeech == MorfologyParameters.TypeOfSpeech.VERB) {
+        } else if (acronymTypeOfSpeech == MorfologyParameters.TypeOfSpeech.NOUN && VERB_TYPES.contains(mainWordTypeOfSpeech)) {
             //model 2:  глаг. (главн.) + сокр. (сущ.)
             if (preposition != null && !preposition.isEmpty()) {
                 long prepositionCase = getCaseByPreposition(preposition);
@@ -233,15 +252,17 @@ public class AbbrResolver {
     }
 
     private void removeIf(List<String> matchList, Class morfologyParameterClass, long param) {
-        matchList.removeIf(s -> {
-            try {
-                OmoFormList omoForms = jMorfSdk.getAllCharacteristicsOfForm(s);
-                return omoForms.isEmpty() || omoForms.get(0).getTheMorfCharacteristics(morfologyParameterClass) != param;
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            return false;
-        });
+        if (param != 0L) {
+            matchList.removeIf(s -> {
+                try {
+                    OmoFormList omoForms = jMorfSdk.getAllCharacteristicsOfForm(s);
+                    return omoForms.isEmpty() || omoForms.get(0).getTheMorfCharacteristics(morfologyParameterClass) != param;
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                return false;
+            });
+        }
     }
 
     private long getCaseByPreposition(String preposition) {

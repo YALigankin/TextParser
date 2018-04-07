@@ -40,6 +40,14 @@ public class TestAbbrResolver {
         String expText5 = "Ќовый ректор института пообещал студентам хорошие стипендии.";
         assertEquals(expText5, splitTest(jMorfSdk, text5));
 
+        String text6 = "–ешено построить завод по пр-ву автомобилей.";
+        String expText6 = "–ешено построить завод по производству автомобилей.";
+        assertEquals(expText6, splitTest(jMorfSdk, text6));
+
+        String text7 = "“еперь нужно переходить к стр-ву крыши.";
+        String expText7 = "“еперь нужно переходить к строительству крыши.";
+        assertEquals(expText7, splitTest(jMorfSdk, text7));
+
         jMorfSdk.finish();
 
     }
