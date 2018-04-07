@@ -9,6 +9,8 @@ public class TestImportMemoryDictionary {
     @Test
     public void test() throws Exception {
 
+        MemoryDictionary.getInstance().close();
+
         Importer importer = new ImportMemory();
         importer.doImport(this.getClass().getResourceAsStream("/importMemory.txt"), "importMemory.txt");
 

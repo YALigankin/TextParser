@@ -1,9 +1,11 @@
 import beans.Item;
 import org.apache.commons.collections4.trie.PatriciaTrie;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.util.*;
 
-public class MemoryDictionary implements IDictionary {
+public class MemoryDictionary implements IDictionary, Closeable {
 
     private static MemoryDictionary singleInstance;
     private static PatriciaTrie<List<String>> dictionary;
@@ -40,5 +42,11 @@ public class MemoryDictionary implements IDictionary {
             return resultList;
         }
         return Collections.emptyList();
+    }
+
+    @Override
+    public void close() throws IOException {
+        dictionary.clear();
+        singleInstance = null;
     }
 }
