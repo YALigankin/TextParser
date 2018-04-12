@@ -81,7 +81,6 @@ public class TestTextManager {
         assertEquals(14, sentences.size());
     }
 
-    @Ignore
     @Test
     public void testSplitText5() throws Exception {
 
@@ -93,7 +92,7 @@ public class TestTextManager {
         String text = IOUtils.toString(this.getClass().getResourceAsStream("/text5.txt"), Charset.forName("windows-1251"));
 
         List<Sentence> sentences = textManager.splitText(text);
-        assertEquals(14, sentences.size());
+        assertEquals(7, sentences.size());
     }
 
     @Ignore

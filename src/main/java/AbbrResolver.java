@@ -12,6 +12,12 @@ public class AbbrResolver {
 
     private static final List<Byte> VERB_TYPES = Arrays.asList(MorfologyParameters.TypeOfSpeech.VERB, MorfologyParameters.TypeOfSpeech.INFINITIVE);
 
+    private static final Set<String> GENITIVE_PREPOSITIONS = new HashSet<>(Arrays.asList("без", "у", "до", "от", "с", "около", "из", "возле", "после", "для", "вокруг"));
+    private static final Set<String> DATIVE_PREPOSITIONS = new HashSet<>(Arrays.asList("к", "по"));
+    private static final Set<String> ACCUSATIVE_PREPOSITIONS = new HashSet<>(Arrays.asList("в", "за", "на", "про", "через"));
+    private static final Set<String> ABLTIVE_PREPOSITIONS = new HashSet<>(Arrays.asList("за", "над", "под", "перед", "с"));
+    private static final Set<String> PREPOSITIONA_PREPOSITIONS = new HashSet<>(Arrays.asList("в", "на", "о", "об", "обо", "при"));
+
     private JMorfSdk jMorfSdk;
 
     public void setJMorfSdk(JMorfSdk jMorfSdk) {
@@ -19,31 +25,19 @@ public class AbbrResolver {
     }
 
     public void fillAbbrDescriptions(IDictionary dictionary, List<Descriptor> descriptors) throws Exception {
-        Iterator<Descriptor> iter = descriptors.iterator();
-        List<String> notFounded = new ArrayList<>();
-        while (iter.hasNext()) {
-            Descriptor curDescriptor = iter.next();
-            if (curDescriptor.getType().equals(DescriptorType.SHORT_WORD)) {
-                List<String> longForms = dictionary.findAbbrLongForms(curDescriptor.getValue());    //TODO затратный поиск (нужно запрашивать пачкой) + cокращения могут повторяться в разных предложениях
+        for (Descriptor curDescriptor : descriptors) {
+            List<String> longForms = dictionary.findAbbrLongForms(curDescriptor.getValue());    //TODO затратный поиск (нужно запрашивать пачкой) + cокращения могут повторяться в разных предложениях
 
-                if (longForms.isEmpty() && curDescriptor.getValue().contains("-")) {
-                    int pointer = curDescriptor.getValue().length() - 1;
-                    while (curDescriptor.getValue().charAt(pointer) != '-' && (longForms = dictionary.findAbbrLongForms(curDescriptor.getValue().substring(0, pointer))).isEmpty()) {
-                        pointer--;
-                    }
-                }
-
-                if (!longForms.isEmpty()) {
-                    curDescriptor.setDesc(longForms.get(0));           //TODO пока берется первое попавшееся значение аббревиатуры
-                } else {
-                    notFounded.add(curDescriptor.getValue());
-                    iter.remove();    //не смогли найти - Regex неправильно определил - удаляем из списка
+            if (longForms.isEmpty() && curDescriptor.getValue().contains("-")) {
+                int pointer = curDescriptor.getValue().length() - 1;
+                while (curDescriptor.getValue().charAt(pointer) != '-' && (longForms = dictionary.findAbbrLongForms(curDescriptor.getValue().substring(0, pointer))).isEmpty()) {
+                    pointer--;
                 }
             }
-        }
-        System.out.println("NotFouded:");
-        for (String s : notFounded) {
-            System.out.println(s);
+
+            if (!longForms.isEmpty()) {
+                curDescriptor.setDesc(longForms.get(0));           //TODO пока берется первое попавшееся значение аббревиатуры
+            }
         }
     }
 
@@ -55,7 +49,7 @@ public class AbbrResolver {
         String copy = sentence.getContent();
         for (int i = 0; i < descriptors.size(); i++) {
             Descriptor curDescriptor = descriptors.get(i);
-            if (Objects.equals(DescriptorType.SHORT_WORD, curDescriptor.getType())) {
+            if (Objects.equals(curDescriptor.getType(), DescriptorType.SHORT_WORD)) {
 
                 String[] acronymWords = curDescriptor.getDesc().split(" ");
                 boolean[] capitalizeWords = new boolean[acronymWords.length];
@@ -106,8 +100,8 @@ public class AbbrResolver {
             for (int i = 0; i < acronymWords.length; i++) {
                 if (!(omoForms = jMorfSdk.getAllCharacteristicsOfForm(acronymWords[i])).isEmpty()) {
                     omoForm = omoForms.get(0);
-                    if (Objects.equals(MorfologyParameters.TypeOfSpeech.NOUN, omoForm.getTypeOfSpeech())
-                            && Objects.equals(MorfologyParameters.Case.NOMINATIVE, omoForm.getTheMorfCharacteristics(MorfologyParameters.Case.class))) {
+                    if (omoForm.getTypeOfSpeech() == MorfologyParameters.TypeOfSpeech.NOUN
+                            && omoForm.getTheMorfCharacteristics(MorfologyParameters.Case.class) == MorfologyParameters.Case.NOMINATIVE) {
                         return i;
                     }
                 }
@@ -134,9 +128,8 @@ public class AbbrResolver {
             //главное слово впереди
             while (++wordIndex < descriptors.size()) {
                 Descriptor curDescriptor = descriptors.get(wordIndex);
-                if (Objects.equals(DescriptorType.RUSSIAN_LEX, curDescriptor.getType())) {
-                    String curWord = curDescriptor.getValue().toLowerCase();
-                    OmoForm wordOmoForm = jMorfSdk.getAllCharacteristicsOfForm(curWord).get(0);
+                if (Objects.equals(curDescriptor.getType(), DescriptorType.RUSSIAN_LEX) && !Character.isUpperCase(curDescriptor.getValue().charAt(0))) {
+                    OmoForm wordOmoForm = jMorfSdk.getAllCharacteristicsOfForm(curDescriptor.getValue()).get(0);
                     if (wordOmoForm.getTypeOfSpeech() == MorfologyParameters.TypeOfSpeech.NOUN) {
                         return wordIndex;
                     }
@@ -146,9 +139,8 @@ public class AbbrResolver {
             //главное слово позади
             while (--wordIndex >= 0) {
                 Descriptor curDescriptor = descriptors.get(wordIndex);
-                if (Objects.equals(DescriptorType.RUSSIAN_LEX, curDescriptor.getType())) {
-                    String curWord = curDescriptor.getValue().toLowerCase();
-                    OmoForm wordOmoForm = jMorfSdk.getAllCharacteristicsOfForm(curWord).get(0);
+                if (Objects.equals(curDescriptor.getType(), DescriptorType.RUSSIAN_LEX) && !Character.isUpperCase(curDescriptor.getValue().charAt(0))) {
+                    OmoForm wordOmoForm = jMorfSdk.getAllCharacteristicsOfForm(curDescriptor.getValue()).get(0);
                     if (wordOmoForm.getTypeOfSpeech() == MorfologyParameters.TypeOfSpeech.NOUN
                             || VERB_TYPES.contains(wordOmoForm.getTypeOfSpeech())) {
                         return wordIndex;
@@ -165,9 +157,8 @@ public class AbbrResolver {
         int endIndex = startIndex + Math.abs(delta);
         for (int wordIndex = startIndex + 1; wordIndex < endIndex; wordIndex++) {
             Descriptor curDescriptor = descriptors.get(wordIndex);
-            if (Objects.equals(DescriptorType.RUSSIAN_LEX, curDescriptor.getType())) {
-                String curWord = curDescriptor.getValue().toLowerCase();
-                OmoForm wordOmoForm = jMorfSdk.getAllCharacteristicsOfForm(curWord).get(0);
+            if (Objects.equals(curDescriptor.getType(), DescriptorType.RUSSIAN_LEX) && !Character.isUpperCase(curDescriptor.getValue().charAt(0))) {
+                OmoForm wordOmoForm = jMorfSdk.getAllCharacteristicsOfForm(curDescriptor.getValue()).get(0);
                 if (wordOmoForm.getTypeOfSpeech() == MorfologyParameters.TypeOfSpeech.PRETEXT) {
                     return wordIndex;
                 }
@@ -204,7 +195,14 @@ public class AbbrResolver {
                 removeIf(matchList, MorfologyParameters.Numbers.class, mainWordNumbers);
                 return matchList.get(0);
             } else {
-                // TODO глагол переходный ?
+                long transitivity = mainWordOmoForm.getTheMorfCharacteristics(MorfologyParameters.Transitivity.class);
+                if (transitivity == MorfologyParameters.Transitivity.TRAN) {
+                    List<String> matchList = jMorfSdk.getDerivativeForm(acronymMainWord, MorfologyParameters.Case.ACCUSATIVE);
+                    removeIf(matchList, MorfologyParameters.Numbers.class, mainWordNumbers);
+                    return matchList.get(0);
+                } else if (transitivity == MorfologyParameters.Transitivity.INTR) {
+                    //TODO глагол непереходный. Что делать?
+                }
             }
         } else if (acronymTypeOfSpeech == MorfologyParameters.TypeOfSpeech.NOUN && mainWordTypeOfSpeech == MorfologyParameters.TypeOfSpeech.NOUN) {
             //model 3:  сущ. (главн.) + сокр. (сущ.)
@@ -242,7 +240,7 @@ public class AbbrResolver {
                     String initialForm = jMorfSdk.getAllCharacteristicsOfForm(curWord).get(0).getInitialFormString();
                     List<String> matchList = jMorfSdk.getDerivativeForm(initialForm, acronymCase);
                     removeIf(matchList, MorfologyParameters.Numbers.class, lastNounNumbers);
-                    //removeIf(matchList, MorfologyParameters.Gender.class, lastNounGender);       //мужской - средний род (противоположном направлении, противоположном ключе)
+                    removeIf(matchList, MorfologyParameters.Gender.class, lastNounGender);       //мужской - средний род (противоположном направлении, противоположном ключе)
                     if (matchList.size() > 0) {
                         acronymWords[i] = matchList.get(0);
                     }
@@ -266,15 +264,15 @@ public class AbbrResolver {
     }
 
     private long getCaseByPreposition(String preposition) {
-        if (Arrays.asList("без", "у", "до", "от", "с", "около", "из", "возле", "после", "для", "вокруг").contains(preposition)) {
+        if (GENITIVE_PREPOSITIONS.contains(preposition)) {
             return MorfologyParameters.Case.GENITIVE;  //GENITIVE1 GENITIVE2 ???
-        } else if (Arrays.asList("к", "по").contains(preposition)) {
+        } else if (DATIVE_PREPOSITIONS.contains(preposition)) {
             return MorfologyParameters.Case.DATIVE;
-        } else if (Arrays.asList("в", "за", "на", "про", "через").contains(preposition)) {
+        } else if (ACCUSATIVE_PREPOSITIONS.contains(preposition)) {
             return MorfologyParameters.Case.ACCUSATIVE;  //ACCUSATIVE2 ???
-        } else if (Arrays.asList("за", "над", "под", "перед", "с").contains(preposition)) {
+        } else if (ABLTIVE_PREPOSITIONS.contains(preposition)) {
             return MorfologyParameters.Case.ABLTIVE;
-        } else if (Arrays.asList("в", "на", "о", "об", "обо", "при").contains(preposition)) {
+        } else if (PREPOSITIONA_PREPOSITIONS.contains(preposition)) {
             return MorfologyParameters.Case.PREPOSITIONA;   //PREPOSITIONA1 PREPOSITIONA2 ???
         } else {
             return MorfologyParameters.Case.NOMINATIVE;   //default

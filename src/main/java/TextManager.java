@@ -49,12 +49,52 @@ public class TextManager {
     public List<Sentence> splitText(String text) throws Exception {
 
         //поиск всех дескрипторов, чтобы потом правильно определить границы предложений
-        List<Descriptor> descriptors = patternFinder.getDescriptors(text);
+        List<Descriptor> allPatternDescriptors = patternFinder.getDescriptors(text);
 
-        //подгрузка значений сокращений из БД, если не найдет, то это не сокращение
-        abbrResolver.fillAbbrDescriptions(dictionary, descriptors);
+        //сокращения из паттерна
+        fillShortWords(Utils.filter(allPatternDescriptors, descriptor -> Objects.equals(descriptor.getType(), DescriptorType.SHORT_WORD)));
 
-        return splitText(text, descriptors);
+        List<Sentence> temp = splitText(text, Utils.filter(allPatternDescriptors, descriptor -> !Objects.equals(descriptor.getType(), DescriptorType.RUSSIAN_LEX)));
+
+        //общепринятые сокращения без точки
+        fillShortWords(getSupposedCommonShortWords(temp));
+
+        return temp;
+    }
+
+    /**
+     * Подгрузка значений сокращений из БД, если не найдет, то это не сокращение
+     */
+    private void fillShortWords(List<Descriptor> supposedShortWords) throws Exception {
+        abbrResolver.fillAbbrDescriptions(dictionary, supposedShortWords);
+        for (Descriptor descriptor : supposedShortWords) {
+            if (descriptor.getDesc() != null && !descriptor.getDesc().isEmpty()) {
+                descriptor.setType(DescriptorType.SHORT_WORD);
+            } else {
+                descriptor.setType(DescriptorType.RUSSIAN_LEX);
+            }
+        }
+    }
+
+    /**
+     * Ищет общепринятые сокращения без точки, стоящие после чисел.
+     */
+    private List<Descriptor> getSupposedCommonShortWords(List<Sentence> sentences) {
+        List<Descriptor> resList = new ArrayList<>();
+        for (Sentence sentence : sentences) {
+            int needAdd = 0;
+            for (Descriptor curDesc : sentence.getDescriptors()) {
+                if (Objects.equals(curDesc.getType(), DescriptorType.NUM_SEQ)) {
+                    needAdd = 2;
+                } else if (needAdd > 0) {
+                    needAdd--;
+                    if (!Objects.equals(curDesc.getType(), DescriptorType.SHORT_WORD)) {
+                        resList.add(curDesc);
+                    }
+                }
+            }
+        }
+        return resList;
     }
 
     private List<Sentence> splitText(String text, List<Descriptor> descriptors) {
@@ -210,7 +250,9 @@ public class TextManager {
             }
         }
 
-        sentence.addDescriptor(new Descriptor(getDescriptorType(hasRussianLex, hasDigit, hasForeignLex), wordStartPos, (text.length() - 1) - wordStartPos, text.substring(wordStartPos, (text.length() - 1))));
+        if (wordStartPos < text.length() - 1) {
+            sentence.addDescriptor(new Descriptor(getDescriptorType(hasRussianLex, hasDigit, hasForeignLex), wordStartPos, (text.length() - 1) - wordStartPos, text.substring(wordStartPos, (text.length() - 1))));
+        }
 
         sentence.setIndexInText(sentenceIndex++);
         sentence.setStartPos(sentenceStartPos);

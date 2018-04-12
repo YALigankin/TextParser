@@ -21,6 +21,10 @@ public class Descriptor {
         return type;
     }
 
+    public void setType(int type) {
+        this.type = type;
+    }
+
     public Integer getStartPos() {
         return startPos;
     }

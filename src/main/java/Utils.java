@@ -1,5 +1,8 @@
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
+import java.util.function.Predicate;
 
 public class Utils {
 
@@ -42,5 +45,15 @@ public class Utils {
             sb.setLength(sb.length() - separator.length());
         }
         return sb.toString();
+    }
+
+    public static <T> List<T> filter(List<T> list, Predicate<T> predicate) {
+        List<T> resultList = new ArrayList<>();
+        for (T t : list) {
+            if (predicate.test(t)) {
+                resultList.add(t);
+            }
+        }
+        return resultList;
     }
 }
