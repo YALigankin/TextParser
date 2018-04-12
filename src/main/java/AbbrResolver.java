@@ -145,6 +145,11 @@ public class AbbrResolver {
                             || VERB_TYPES.contains(wordOmoForm.getTypeOfSpeech())) {
                         return wordIndex;
                     }
+                } else if (Objects.equals(curDescriptor.getType(), DescriptorType.NUM_SEQ) && acronymIndex - wordIndex < 3) {
+                    OmoFormList omoFormList = jMorfSdk.getAllCharacteristicsOfForm(curDescriptor.getValue());
+                    if (!omoFormList.isEmpty() && omoFormList.get(0).getTypeOfSpeech() == MorfologyParameters.TypeOfSpeech.NUMERAL) {
+                        return wordIndex;
+                    }
                 }
             }
         }
@@ -216,6 +221,23 @@ public class AbbrResolver {
                 removeIf(matchList, MorfologyParameters.Numbers.class, mainWordNumbers);
                 //removeIf(jMorfSdk, matchList, MorfologyParameters.Gender.class, mainWordGender);    //мужской - средний род (противоположном направлении, противоположном ключе)
                 return matchList.get(0);
+            }
+        } else if (acronymTypeOfSpeech == MorfologyParameters.TypeOfSpeech.NOUN && mainWordTypeOfSpeech == MorfologyParameters.TypeOfSpeech.NUMERAL) {
+            Integer count = Utils.parseInt(collacationMainWord);
+            if (count != null) {
+                int tailTen = count % 10;
+                int tailHundred = count % 100;
+                if (tailTen == 1 && tailHundred != 11) {
+                    return acronymMainWord;
+                } else if ((tailTen == 2 && tailHundred != 12) || (tailTen == 3 && tailHundred != 13) || (tailTen == 4 && tailHundred != 14)) {
+                    List<String> matchList = jMorfSdk.getDerivativeForm(acronymMainWord, MorfologyParameters.Case.ACCUSATIVE);
+                    removeIf(matchList, MorfologyParameters.Numbers.class, MorfologyParameters.Numbers.SINGULAR);
+                    return matchList.get(0);
+                } else {
+                    List<String> matchList = jMorfSdk.getDerivativeForm(acronymMainWord, MorfologyParameters.Case.ACCUSATIVE);
+                    removeIf(matchList, MorfologyParameters.Numbers.class, MorfologyParameters.Numbers.PLURAL);
+                    return matchList.get(0);
+                }
             }
         }
         return acronymMainWord;

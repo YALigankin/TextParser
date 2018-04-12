@@ -67,12 +67,17 @@ public class TextManager {
      */
     private void fillShortWords(List<Descriptor> supposedShortWords) throws Exception {
         abbrResolver.fillAbbrDescriptions(dictionary, supposedShortWords);
+        Set<String> notFounded = new HashSet<>();
         for (Descriptor descriptor : supposedShortWords) {
             if (descriptor.getDesc() != null && !descriptor.getDesc().isEmpty()) {
                 descriptor.setType(DescriptorType.SHORT_WORD);
             } else {
                 descriptor.setType(DescriptorType.RUSSIAN_LEX);
+                notFounded.add(descriptor.getValue());
             }
+        }
+        if (!notFounded.isEmpty()) {
+            System.out.println("Not founded " + notFounded.size() + " words: " + Arrays.toString(notFounded.toArray()));
         }
     }
 
@@ -88,7 +93,7 @@ public class TextManager {
                     needAdd = 2;
                 } else if (needAdd > 0) {
                     needAdd--;
-                    if (!Objects.equals(curDesc.getType(), DescriptorType.SHORT_WORD)) {
+                    if (Objects.equals(curDesc.getType(), DescriptorType.RUSSIAN_LEX) || Objects.equals(curDesc.getType(), DescriptorType.FOREIGN_LEX)) {
                         resList.add(curDesc);
                     }
                 }
