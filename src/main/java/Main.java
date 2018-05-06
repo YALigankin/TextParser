@@ -17,10 +17,7 @@ public class Main {
         AbbrResolver abbrResolver = new AbbrResolver();
         abbrResolver.setJMorfSdk(jMorfSdk);
 
-        Importer importer = new ImportMemory();
-        importer.doImport(Main.class.getResourceAsStream("/abbrDic.txt"), "abbrDic.txt");
-
-        TextManager textManager = new TextManager(patternFinder, abbrResolver, MemoryDictionary.getInstance());
+        TextManager textManager = new TextManager(patternFinder, abbrResolver);
 
         List<Sentence> sentences = textManager.splitText(text);
 

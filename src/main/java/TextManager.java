@@ -30,20 +30,13 @@ public class TextManager {
 
     private final PatternFinder patternFinder;
     private final AbbrResolver abbrResolver;
-    private final IDictionary dictionary;
+    private final DBManager dictionary;
 
     //DbDictionary
     public TextManager(PatternFinder patternFinder, AbbrResolver abbrResolver) {
         this.patternFinder = patternFinder;
         this.abbrResolver = abbrResolver;
         this.dictionary = DBManager.getInstance();
-    }
-
-    //MemoryDictionary
-    public TextManager(PatternFinder patternFinder, AbbrResolver abbrResolver, IDictionary dictionary) {
-        this.patternFinder = patternFinder;
-        this.abbrResolver = abbrResolver;
-        this.dictionary = dictionary;
     }
 
     public List<Sentence> splitText(String text) throws Exception {

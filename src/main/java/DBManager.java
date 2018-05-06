@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
-public class DBManager implements IDictionary, Closeable {
+public class DBManager implements Closeable {
 
     private static DBManager singleInstance;
     private static Connection conn;

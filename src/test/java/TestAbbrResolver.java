@@ -15,9 +15,6 @@ public class TestAbbrResolver {
 
         JMorfSdk jMorfSdk = JMorfSdkLoad.loadFullLibrary();
 
-        Importer importer = new ImportMemory();
-        importer.doImport(this.getClass().getResourceAsStream("/abbrDic.txt"), "abbrDic.txt");
-
         //усечение в нужной форме
         String text1 = "” кажд. человека должны быть свои инструменты. ќтдача последует в противоп. направлении.";
         String expText1 = "” каждого человека должны быть свои инструменты. ќтдача последует в противоположном направлении.";
@@ -93,7 +90,7 @@ public class TestAbbrResolver {
         AbbrResolver abbrResolver = new AbbrResolver();
         abbrResolver.setJMorfSdk(jMorfSdk);
 
-        Iterator<Sentence> iter = new TextManager(patternFinder, abbrResolver, MemoryDictionary.getInstance()).splitText(text).iterator();
+        Iterator<Sentence> iter = new TextManager(patternFinder, abbrResolver).splitText(text).iterator();
 
         StringBuilder sb = new StringBuilder();
         while (iter.hasNext()) {
