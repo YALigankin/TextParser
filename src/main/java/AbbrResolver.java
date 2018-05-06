@@ -24,16 +24,18 @@ public class AbbrResolver {
         this.jMorfSdk = jMorfSdk;
     }
 
-    public void fillAbbrDescriptions(IDictionary dictionary, List<Descriptor> descriptors) throws Exception {
+    public void fillAbbrDescriptions(DBManager dictionary, List<Descriptor> descriptors) throws Exception {
         for (Descriptor curDescriptor : descriptors) {
             List<String> longForms = dictionary.findAbbrLongForms(curDescriptor.getValue());    //TODO затратный поиск (нужно запрашивать пачкой) + cокращения могут повторяться в разных предложениях
 
-            if (longForms.isEmpty() && curDescriptor.getValue().contains("-")) {
-                int pointer = curDescriptor.getValue().length() - 1;
-                while (curDescriptor.getValue().charAt(pointer) != '-' && (longForms = dictionary.findAbbrLongForms(curDescriptor.getValue().substring(0, pointer))).isEmpty()) {
-                    pointer--;
+                if (longForms.isEmpty() && curDescriptor.getValue().contains("-")) {
+                    for (String s : getPossibleInfinitives( curDescriptor.getValue())) {
+                    longForms = dictionary.findAbbrLongForms(s);
+                        if (!longForms.isEmpty()) {
+                        break;
+                        }
+                    }
                 }
-            }
 
             if (!longForms.isEmpty()) {
                 curDescriptor.setDesc(longForms.get(0));           //TODO пока берется первое попавшееся значение аббревиатуры
@@ -299,5 +301,63 @@ public class AbbrResolver {
         } else {
             return MorfologyParameters.Case.NOMINATIVE;   //default
         }
+    }
+
+    private List<String> getPossibleInfinitives(String str) {
+        char lastChar = str.charAt(str.length() - 1);
+        char prevLastChar = str.charAt(str.length() - 2);
+        if (lastChar == 'а') {
+            return Arrays.asList(
+                    str.substring(0, str.length() - 1) + 'о',
+                    str.substring(0, str.length() - 1)
+            );
+        } else if (lastChar == 'ы') {
+            return Collections.singletonList(str.substring(0, str.length() - 1) + 'а');
+        } else if (lastChar == 'и') {
+            return Arrays.asList(
+                    str.substring(0, str.length() - 1) + 'я',
+                    str.substring(0, str.length() - 1) + 'ь'
+            );
+        } else if (lastChar == 'е') {
+            return Arrays.asList(
+                    str.substring(0, str.length() - 1) + 'а',
+                    str.substring(0, str.length() - 1) + 'я',
+                    str.substring(0, str.length() - 1) + 'о',
+                    str.substring(0, str.length() - 1) + 'е',
+                    str.substring(0, str.length() - 1) + 'ь'
+            );
+        } else if (lastChar == 'я') {
+            return Collections.singletonList(str.substring(0, str.length() - 1) + 'ь');
+        } else if (lastChar == 'ю') {
+            return Arrays.asList(
+                    str.substring(0, str.length() - 1) + 'е',
+                    str.substring(0, str.length() - 1) + 'я',
+                    str.substring(0, str.length() - 1) + 'ь'
+            );
+        } else if (lastChar == 'у') {
+            return Arrays.asList(
+                    str.substring(0, str.length() - 1) + 'а',
+                    str.substring(0, str.length() - 1) + 'о',
+                    str.substring(0, str.length() - 1)
+            );
+        } else if (lastChar == 'й') {
+            if (prevLastChar == 'о') {
+                return Collections.singletonList(str.substring(0, str.length() - 2) + 'а');
+            } else if (prevLastChar == 'е') {
+                return Collections.singletonList(str.substring(0, str.length() - 2) + 'я');
+            }
+        } else if (lastChar == 'м') {
+            if (prevLastChar == 'о') {
+                return Arrays.asList(
+                        str.substring(0, str.length() - 2) + 'о',
+                        str.substring(0, str.length() - 2)
+                );
+            } else if (prevLastChar == 'e') {
+                return Collections.singletonList(str.substring(0, str.length() - 2) + 'e');
+            } else if (prevLastChar == 'ё') {
+                return Collections.singletonList(str.substring(0, str.length() - 1) + 'ь');
+            }
+        }
+        return Collections.emptyList();
     }
 }
